@@ -1,5 +1,5 @@
 name: tetris_engine
-description: "A new Flutter package project."
+description: "A customizable Tetris engine for Flutter applications."
 version: 1.0.0
 homepage: https://github.com/rojanparajuli/Tetris-Engine
 repository: https://github.com/rojanparajuli/Tetris-Engine
