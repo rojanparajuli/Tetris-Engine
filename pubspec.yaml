@@ -1,7 +1,9 @@
 name: tetris_engine
 description: "A new Flutter package project."
 version: 1.0.0
-homepage:
+homepage: https://github.com/rojanparajuli/Tetris-Engine
+repository: https://github.com/rojanparajuli/Tetris-Engine
+issue_tracker: https://github.com/rojanparajuli/Tetris-Engine/issues
 
 environment:
   sdk: ^3.12.2
