@@ -3,6 +3,11 @@
 A complete, reusable Tetris Engine package — pure Dart, no backend, no cloud dependencies.
 Works on Android, iOS, Web, Windows, Linux, and macOS.
 
+
+# ScreenShot
+  
+![Screenshot](assets/ss.jpg)
+
 ## Features
 
 - **Full Tetris Guideline engine** — 7-bag randomizer, SRS rotation, ghost piece, hold, next queue
