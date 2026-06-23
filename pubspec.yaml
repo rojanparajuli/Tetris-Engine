@@ -1,6 +1,6 @@
 name: tetris_engine
 description: "A customizable Tetris engine for Flutter applications."
-version: 1.0.0
+version: 1.1.0
 homepage: https://github.com/rojanparajuli/Tetris-Engine
 repository: https://github.com/rojanparajuli/Tetris-Engine
 issue_tracker: https://github.com/rojanparajuli/Tetris-Engine/issues
