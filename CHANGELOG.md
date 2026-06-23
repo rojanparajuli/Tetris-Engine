@@ -1,3 +1,6 @@
+## 1.1.0
+- Updated the example application to improve clarity and demonstrate package usage more effectively.
+
 ## 1.0.0
 
 * Initial release.
