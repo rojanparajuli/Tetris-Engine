@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Lock file is regenerated for each Flutter version; not tracked for package examples.
+pubspec.lock

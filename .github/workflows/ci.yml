@@ -15,7 +15,7 @@ jobs:
         # Oldest supported version (see pubspec.yaml) and latest stable.
         flutter: ['3.32.x', '']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -36,6 +36,13 @@ jobs:
         working-directory: example
         run: flutter test
 
+      # Newer Flutter tooling can rewrite checked-in files (e.g.
+      # analysis_options.yaml) during the run. Show what changed, then restore
+      # the committed files so the dry run validates exactly what gets published.
       - name: Validate package
         if: matrix.flutter == ''
-        run: flutter pub publish --dry-run
+        run: |
+          git status --short
+          git diff
+          git checkout -- .
+          flutter pub publish --dry-run
