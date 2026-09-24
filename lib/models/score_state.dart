@@ -4,11 +4,7 @@ class ScoreState {
   final int combo;
   final bool backToBack; // B2B Tetris / T-Spin flag
 
-  const ScoreState({
-    this.score = 0,
-    this.combo = 0,
-    this.backToBack = false,
-  });
+  const ScoreState({this.score = 0, this.combo = 0, this.backToBack = false});
 
   ScoreState copyWith({int? score, int? combo, bool? backToBack}) => ScoreState(
     score: score ?? this.score,

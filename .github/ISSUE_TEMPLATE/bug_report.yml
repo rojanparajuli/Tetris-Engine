@@ -1,0 +1,31 @@
+name: Bug report
+description: Something in the engine or widgets doesn't work as expected.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A small code sample. For gameplay bugs, a replay JSON (`ReplayRecorder.exportJson()`) is ideal.
+      render: dart
+  - type: input
+    id: version
+    attributes:
+      label: tetris_engine version
+      placeholder: 1.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Flutter version and platform
+      description: Output of `flutter --version`, and the platform (Android, iOS, web, …).
+    validations:
+      required: true

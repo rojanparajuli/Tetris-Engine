@@ -25,7 +25,26 @@ void main() {
       for (int i = 0; i < 4; i++) {
         state = levelSystem.onLinesCleared(state, 4);
       }
-      expect(state.level, greaterThan(1));
+      expect(state.level, 2);
+      expect(state.linesCleared, 16);
+      // 6 lines carried over past level 2, so 4 more are needed.
+      expect(state.linesUntilNextLevel, 4);
+    });
+
+    test('overshooting a level carries lines over', () {
+      var state = const LevelState(linesUntilNextLevel: 2);
+      state = levelSystem.onLinesCleared(state, 4);
+      expect(state.level, 2);
+      expect(state.linesUntilNextLevel, 8);
+    });
+
+    test('custom linesPerLevel and multiple levels at once', () {
+      const system = LevelSystem(linesPerLevel: 2);
+      var state = system.initialState(startLevel: 3);
+      expect(state.level, 3);
+      state = system.onLinesCleared(state, 4);
+      expect(state.level, 5);
+      expect(state.linesUntilNextLevel, 2);
     });
 
     test('gravity increases with level', () {

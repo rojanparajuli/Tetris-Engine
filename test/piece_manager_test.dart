@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tetris_engine/engine/piece_manager.dart';
 import 'package:tetris_engine/models/tetromino.dart';
@@ -32,6 +34,33 @@ void main() {
       expect(pm.next(), TetrominoType.I);
       expect(pm.next(), TetrominoType.O);
       expect(pm.next(), TetrominoType.T);
+    });
+
+    test('same Random seed gives the same sequence', () {
+      final a = PieceManager(random: Random(99));
+      final b = PieceManager(random: Random(99));
+      expect(
+        List.generate(21, (_) => a.next()),
+        List.generate(21, (_) => b.next()),
+      );
+    });
+  });
+
+  group('Tetromino.spawn', () {
+    test('matches Guideline columns on a 10-wide board', () {
+      expect(Tetromino.spawn(TetrominoType.I).position.col, 3);
+      expect(Tetromino.spawn(TetrominoType.O).position.col, 4);
+      expect(Tetromino.spawn(TetrominoType.T).position.col, 3);
+    });
+
+    test('is centered on other board widths', () {
+      for (final type in TetrominoType.values) {
+        final cols = Tetromino.spawn(
+          type,
+          boardCols: 6,
+        ).cells.map((c) => c.col);
+        expect(cols.every((c) => c >= 1 && c <= 4), isTrue, reason: '$type');
+      }
     });
   });
 }

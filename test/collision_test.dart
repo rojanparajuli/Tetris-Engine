@@ -19,27 +19,42 @@ void main() {
 
     test('out-of-bounds left', () {
       final board = emptyBoard();
-      final piece = Tetromino(type: TetrominoType.I, position: const Position(5, -2));
+      final piece = Tetromino(
+        type: TetrominoType.I,
+        position: const Position(5, -2),
+      );
       expect(collision.hasCollision(piece, board), isTrue);
     });
 
     test('out-of-bounds right', () {
       final board = emptyBoard();
-      final piece = Tetromino(type: TetrominoType.I, position: const Position(5, 9));
+      final piece = Tetromino(
+        type: TetrominoType.I,
+        position: const Position(5, 9),
+      );
       expect(collision.hasCollision(piece, board), isTrue);
     });
 
     test('out-of-bounds bottom', () {
       final board = emptyBoard();
-      final piece = Tetromino(type: TetrominoType.O, position: const Position(20, 4));
+      final piece = Tetromino(
+        type: TetrominoType.O,
+        position: const Position(20, 4),
+      );
       expect(collision.hasCollision(piece, board), isTrue);
     });
 
     test('collision with locked cell', () {
       var board = emptyBoard();
-      final locked = Tetromino(type: TetrominoType.O, position: const Position(18, 4));
+      final locked = Tetromino(
+        type: TetrominoType.O,
+        position: const Position(18, 4),
+      );
       board = board.withPieceLocked(locked);
-      final piece = Tetromino(type: TetrominoType.O, position: const Position(18, 4));
+      final piece = Tetromino(
+        type: TetrominoType.O,
+        position: const Position(18, 4),
+      );
       expect(collision.hasCollision(piece, board), isTrue);
     });
 
@@ -52,9 +67,17 @@ void main() {
 
     test('canMove returns false when blocked below', () {
       var board = emptyBoard();
-      final bottom = Tetromino(type: TetrominoType.I, rotation: 0, position: const Position(18, 0));
+      final bottom = Tetromino(
+        type: TetrominoType.I,
+        rotation: 0,
+        position: const Position(18, 0),
+      );
       board = board.withPieceLocked(bottom);
-      final piece = Tetromino(type: TetrominoType.I, rotation: 0, position: const Position(17, 0));
+      final piece = Tetromino(
+        type: TetrominoType.I,
+        rotation: 0,
+        position: const Position(17, 0),
+      );
       expect(collision.canMove(piece, board, 1, 0), isFalse);
     });
   });

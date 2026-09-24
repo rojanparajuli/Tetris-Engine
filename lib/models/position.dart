@@ -5,10 +5,13 @@ class Position {
 
   const Position(this.row, this.col);
 
-  Position operator +(Position other) => Position(row + other.row, col + other.col);
-  Position operator -(Position other) => Position(row - other.row, col - other.col);
+  Position operator +(Position other) =>
+      Position(row + other.row, col + other.col);
+  Position operator -(Position other) =>
+      Position(row - other.row, col - other.col);
 
-  Position copyWith({int? row, int? col}) => Position(row ?? this.row, col ?? this.col);
+  Position copyWith({int? row, int? col}) =>
+      Position(row ?? this.row, col ?? this.col);
 
   @override
   bool operator ==(Object other) =>

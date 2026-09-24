@@ -30,10 +30,12 @@ class NextPiecePreview extends StatelessWidget {
           children: [
             Text('NEXT', style: t.labelStyle),
             const SizedBox(height: 4),
-            ...queue.map((type) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: TetrisPiecePreview(type: type, theme: t, size: 52),
-            )),
+            ...queue.map(
+              (type) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: TetrisPiecePreview(type: type, theme: t, size: 52),
+              ),
+            ),
           ],
         );
       },

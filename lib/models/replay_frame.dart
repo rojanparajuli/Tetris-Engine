@@ -1,7 +1,10 @@
 /// One recorded action in a replay sequence.
 class ReplayFrame {
   final int timestampMs;
-  final String action; // 'moveLeft','moveRight','softDrop','hardDrop','rotCW','rotCCW','hold','pause'
+
+  /// An [InputController] action name, e.g. `moveLeft`, `hardDrop` or
+  /// `gravity`.
+  final String action;
 
   const ReplayFrame({required this.timestampMs, required this.action});
 

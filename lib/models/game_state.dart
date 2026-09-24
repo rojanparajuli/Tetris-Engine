@@ -3,15 +3,27 @@ import 'tetromino.dart';
 import 'score_state.dart';
 import 'level_state.dart';
 
+/// Lifecycle of a game.
 enum TetrisGameStatus { idle, playing, paused, gameOver }
 
 /// The complete, serializable snapshot of a Tetris game.
 class GameState {
+  /// Locked cells.
   final BoardState board;
+
+  /// The falling piece, or null between pieces and when not playing.
   final Tetromino? activePiece;
+
+  /// Where [activePiece] would land if hard-dropped.
   final Tetromino? ghostPiece;
+
+  /// The held piece, if any.
   final Tetromino? heldPiece;
+
+  /// False after holding until the next piece spawns.
   final bool canHold;
+
+  /// Upcoming pieces, next first.
   final List<TetrominoType> nextQueue;
   final ScoreState scoreState;
   final LevelState levelState;
@@ -42,18 +54,17 @@ class GameState {
     bool clearActive = false,
     bool clearGhost = false,
     bool clearHeld = false,
-  }) =>
-      GameState(
-        board: board ?? this.board,
-        activePiece: clearActive ? null : activePiece ?? this.activePiece,
-        ghostPiece: clearGhost ? null : ghostPiece ?? this.ghostPiece,
-        heldPiece: clearHeld ? null : heldPiece ?? this.heldPiece,
-        canHold: canHold ?? this.canHold,
-        nextQueue: nextQueue ?? this.nextQueue,
-        scoreState: scoreState ?? this.scoreState,
-        levelState: levelState ?? this.levelState,
-        status: status ?? this.status,
-      );
+  }) => GameState(
+    board: board ?? this.board,
+    activePiece: clearActive ? null : activePiece ?? this.activePiece,
+    ghostPiece: clearGhost ? null : ghostPiece ?? this.ghostPiece,
+    heldPiece: clearHeld ? null : heldPiece ?? this.heldPiece,
+    canHold: canHold ?? this.canHold,
+    nextQueue: nextQueue ?? this.nextQueue,
+    scoreState: scoreState ?? this.scoreState,
+    levelState: levelState ?? this.levelState,
+    status: status ?? this.status,
+  );
 
   Map<String, dynamic> toJson() => {
     'board': board.toJson(),
