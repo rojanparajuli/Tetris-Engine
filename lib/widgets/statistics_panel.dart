@@ -4,6 +4,8 @@ import '../models/tetromino.dart';
 import '../themes/tetris_theme.dart';
 import '../themes/default_theme.dart';
 
+/// Displays lifetime [TetrisStatistics]: games, scores, lines, levels,
+/// play time and piece usage.
 class StatisticsPanel extends StatelessWidget {
   final TetrisStatistics statistics;
   final TetrisTheme? theme;
@@ -29,15 +31,21 @@ class StatisticsPanel extends StatelessWidget {
           _row('Avg Score', statistics.averageScore.toStringAsFixed(0), t),
           _row('Total Lines', statistics.totalLinesCleared.toString(), t),
           _row('Highest Level', statistics.highestLevel.toString(), t),
-          _row('Play Time',
-              _formatDuration(Duration(milliseconds: statistics.totalPlayTimeMs)), t),
+          _row(
+            'Play Time',
+            _formatDuration(Duration(milliseconds: statistics.totalPlayTimeMs)),
+            t,
+          ),
           const SizedBox(height: 12),
           Text('PIECE USAGE', style: t.labelStyle),
           const SizedBox(height: 8),
-          ...TetrominoType.values.map((type) => _row(
+          ...TetrominoType.values.map(
+            (type) => _row(
               type.name,
               statistics.pieceUsage[type]?.toString() ?? '0',
-              t)),
+              t,
+            ),
+          ),
         ],
       ),
     );

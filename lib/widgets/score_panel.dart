@@ -3,6 +3,7 @@ import '../engine/tetris_game.dart';
 import '../themes/tetris_theme.dart';
 import '../themes/default_theme.dart';
 
+/// Shows the current score. Rebuilds automatically as [game] changes.
 class ScorePanel extends StatelessWidget {
   final TetrisGame game;
   final TetrisTheme? theme;
@@ -23,6 +24,7 @@ class ScorePanel extends StatelessWidget {
   }
 }
 
+/// Shows the current level. Rebuilds automatically as [game] changes.
 class LevelPanel extends StatelessWidget {
   final TetrisGame game;
   final TetrisTheme? theme;
@@ -43,6 +45,7 @@ class LevelPanel extends StatelessWidget {
   }
 }
 
+/// Shows the total number of lines cleared in the current game.
 class LinesClearedPanel extends StatelessWidget {
   final TetrisGame game;
   final TetrisTheme? theme;

@@ -14,7 +14,11 @@ class TetrisStatistics {
 
   double get averageScore => totalGames == 0 ? 0 : totalScore / totalGames;
 
-  void recordGameOver({required int score, required int level, required int playTimeMs}) {
+  void recordGameOver({
+    required int score,
+    required int level,
+    required int playTimeMs,
+  }) {
     totalGames++;
     totalScore += score;
     totalPlayTimeMs += playTimeMs;

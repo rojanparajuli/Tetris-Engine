@@ -38,7 +38,9 @@ class TetrisPiecePreview extends StatelessWidget {
           ),
           child: type == null
               ? const SizedBox()
-              : CustomPaint(painter: _PiecePainter(type: type!, theme: t)),
+              : CustomPaint(
+                  painter: _PiecePainter(type: type!, theme: t),
+                ),
         ),
       ],
     );
@@ -57,10 +59,10 @@ class _PiecePainter extends CustomPainter {
     final cells = piece.cells;
 
     // Find bounding box of piece
-    int minR = cells.map((p) => p.row).reduce((a, b) => a < b ? a : b);
-    int maxR = cells.map((p) => p.row).reduce((a, b) => a > b ? a : b);
-    int minC = cells.map((p) => p.col).reduce((a, b) => a < b ? a : b);
-    int maxC = cells.map((p) => p.col).reduce((a, b) => a > b ? a : b);
+    final int minR = cells.map((p) => p.row).reduce((a, b) => a < b ? a : b);
+    final int maxR = cells.map((p) => p.row).reduce((a, b) => a > b ? a : b);
+    final int minC = cells.map((p) => p.col).reduce((a, b) => a < b ? a : b);
+    final int maxC = cells.map((p) => p.col).reduce((a, b) => a > b ? a : b);
 
     final pieceW = (maxC - minC + 1).toDouble();
     final pieceH = (maxR - minR + 1).toDouble();
@@ -82,12 +84,16 @@ class _PiecePainter extends CustomPainter {
         cellSize - 2,
         cellSize - 2,
       );
-      final rr = RRect.fromRectAndRadius(rect, Radius.circular(theme.cellBorderRadius));
+      final rr = RRect.fromRectAndRadius(
+        rect,
+        Radius.circular(theme.cellBorderRadius),
+      );
       canvas.drawRRect(rr, fill);
       canvas.drawRRect(rr, border);
     }
   }
 
   @override
-  bool shouldRepaint(_PiecePainter old) => old.type != type;
+  bool shouldRepaint(_PiecePainter old) =>
+      old.type != type || old.theme != theme;
 }

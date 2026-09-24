@@ -40,10 +40,18 @@ class _TetrisGestureHandlerState extends State<TetrisGestureHandler> {
         final dy = d.localPosition.dy - start.dy;
         final t = widget.swipeThreshold;
         if (dx.abs() > dy.abs()) {
-          if (dx > t) { widget.input.dispatch('moveRight'); _dragStart = d.localPosition; }
-          else if (dx < -t) { widget.input.dispatch('moveLeft'); _dragStart = d.localPosition; }
+          if (dx > t) {
+            widget.input.dispatch('moveRight');
+            _dragStart = d.localPosition;
+          } else if (dx < -t) {
+            widget.input.dispatch('moveLeft');
+            _dragStart = d.localPosition;
+          }
         } else {
-          if (dy > t) { widget.input.dispatch('softDrop'); _dragStart = d.localPosition; }
+          if (dy > t) {
+            widget.input.dispatch('softDrop');
+            _dragStart = d.localPosition;
+          }
         }
       },
       onPanEnd: (d) {

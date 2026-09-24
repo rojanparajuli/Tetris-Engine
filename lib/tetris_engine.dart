@@ -1,4 +1,17 @@
-
+/// A complete, customizable Tetris engine for Flutter.
+///
+/// Create a [TetrisGame], call [TetrisGame.start], and render it with
+/// [TetrisBoard] plus any of the preview and panel widgets:
+///
+/// ```dart
+/// final game = TetrisGame()..start();
+///
+/// TetrisBoard(game: game, theme: darkTetrisTheme);
+/// ```
+///
+/// The engine follows the Tetris Guideline: 7-bag randomizer, SRS rotation
+/// with wall kicks, hold, ghost piece, lock delay, T-Spins, back-to-back,
+/// combos and perfect clears.
 library;
 
 // Models
@@ -10,6 +23,7 @@ export 'models/game_state.dart';
 export 'models/score_state.dart';
 export 'models/level_state.dart';
 export 'models/replay_frame.dart';
+export 'models/tetris_event.dart';
 
 // Engine
 export 'engine/tetris_game.dart';
@@ -42,8 +56,6 @@ export 'themes/default_theme.dart';
 export 'themes/dark_theme.dart';
 export 'themes/colorblind_theme.dart';
 
-
-
 // Widgets
 export 'widgets/tetris_board.dart';
 export 'widgets/next_piece_preview.dart';
@@ -54,3 +66,4 @@ export 'widgets/lines_cleared_panel.dart';
 export 'widgets/game_over_overlay.dart';
 export 'widgets/pause_overlay.dart';
 export 'widgets/statistics_panel.dart';
+export 'widgets/tetris_control_pad.dart';

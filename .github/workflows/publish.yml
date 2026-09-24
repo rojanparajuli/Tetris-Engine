@@ -1,0 +1,25 @@
+# Publishes to pub.dev when a version tag (e.g. v1.2.0) is pushed.
+#
+# One-time setup: on pub.dev open the package's Admin tab, enable
+# "Automated publishing" from GitHub Actions, set the repository to
+# rojanparajuli/Tetris-Engine and the tag pattern to v{{version}}.
+name: Publish to pub.dev
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Needed to authenticate with pub.dev via OIDC.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter test
+      - run: flutter pub publish --force

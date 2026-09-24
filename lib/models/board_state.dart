@@ -10,8 +10,12 @@ class BoardState {
   final List<List<Cell>> grid;
 
   BoardState({required this.rows, required this.cols, List<List<Cell>>? grid})
-      : grid = grid ??
-            List.generate(rows, (_) => List.generate(cols, (_) => const Cell.empty()));
+    : grid =
+          grid ??
+          List.generate(
+            rows,
+            (_) => List.generate(cols, (_) => const Cell.empty()),
+          );
 
   BoardState copyWith({List<List<Cell>>? grid}) =>
       BoardState(rows: rows, cols: cols, grid: grid ?? _deepCopy());
@@ -43,15 +47,15 @@ class BoardState {
 
   bool isRowFull(int row) => grid[row].every((c) => c.filled);
 
-  List<List<Cell>> _deepCopy() =>
-      grid.map((row) => List<Cell>.from(row)).toList();
+  /// True when no cell on the board is filled (e.g. after a perfect clear).
+  bool get isEmpty => grid.every((row) => row.every((c) => !c.filled));
+
+  List<List<Cell>> _deepCopy() => grid.map(List<Cell>.from).toList();
 
   Map<String, dynamic> toJson() => {
     'rows': rows,
     'cols': cols,
-    'grid': grid
-        .map((row) => row.map((c) => c.toJson()).toList())
-        .toList(),
+    'grid': grid.map((row) => row.map((c) => c.toJson()).toList()).toList(),
   };
 
   factory BoardState.fromJson(Map<String, dynamic> json) {
@@ -59,7 +63,11 @@ class BoardState {
     final cols = json['cols'] as int;
     final rawGrid = json['grid'] as List;
     final grid = rawGrid
-        .map((row) => (row as List).map((c) => Cell.fromJson(c as Map<String, dynamic>)).toList())
+        .map(
+          (row) => (row as List)
+              .map((c) => Cell.fromJson(c as Map<String, dynamic>))
+              .toList(),
+        )
         .toList();
     return BoardState(rows: rows, cols: cols, grid: grid);
   }

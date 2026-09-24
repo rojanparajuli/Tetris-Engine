@@ -16,7 +16,10 @@ class CollisionSystem {
   }
 
   bool _outOfBounds(Position pos, BoardState board) =>
-      pos.row < 0 || pos.row >= board.rows || pos.col < 0 || pos.col >= board.cols;
+      pos.row < 0 ||
+      pos.row >= board.rows ||
+      pos.col < 0 ||
+      pos.col >= board.cols;
 
   /// Returns the lowest valid Y the piece can drop to (for ghost piece).
   Tetromino ghostPiece(Tetromino piece, BoardState board) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tetris_engine/tetris_engine.dart';
@@ -11,7 +13,6 @@ void main() {
   ]);
   runApp(const TetrisExampleApp());
 }
-
 
 class TetrisExampleApp extends StatefulWidget {
   const TetrisExampleApp({super.key});
@@ -58,7 +59,6 @@ class _TetrisExampleAppState extends State<TetrisExampleApp> {
   }
 }
 
-
 class TetrisHome extends StatefulWidget {
   final TetrisTheme activeTheme;
   final ValueNotifier<TetrisTheme> themeNotifier;
@@ -78,7 +78,11 @@ class TetrisHome extends StatefulWidget {
 class _TetrisHomeState extends State<TetrisHome> {
   _Screen _screen = _Screen.menu;
   late TetrisGame _game;
+  StreamSubscription<TetrisEvent>? _events;
   int _highScore = 0;
+
+  /// Shared by every game so lifetime stats survive new games.
+  final _statistics = TetrisStatistics();
 
   @override
   void initState() {
@@ -86,18 +90,42 @@ class _TetrisHomeState extends State<TetrisHome> {
     _game = _buildGame();
   }
 
-  TetrisGame _buildGame() => TetrisGame(
-        onScoreChanged: (s) {
-          if (s > _highScore) setState(() => _highScore = s);
-        },
-        onLevelUp: (level) => _showBanner('Level $level!'),
-        onLinesCleared: (lines) {
-          if (lines == 4) _showBanner('TETRIS!');
-        },
-        onGameOver: () => setState(() => _screen = _Screen.gameOver),
-      );
+  TetrisGame _buildGame() {
+    final game = TetrisGame(
+      statistics: _statistics,
+      onScoreChanged: (s) {
+        if (s > _highScore) setState(() => _highScore = s);
+      },
+      onGameOver: () => setState(() => _screen = _Screen.gameOver),
+    );
+    _events?.cancel();
+    _events = game.events.listen(_onEvent);
+    return game;
+  }
+
+  void _onEvent(TetrisEvent e) {
+    switch (e.type) {
+      case TetrisEventType.levelUp:
+        _showBanner('LEVEL ${e.level}!');
+      case TetrisEventType.linesCleared:
+        final parts = [
+          if (e.backToBack) 'BACK-TO-BACK',
+          if (e.tSpin == TSpinType.full) 'T-SPIN',
+          if (e.tSpin == TSpinType.mini) 'T-SPIN MINI',
+          if (e.lines == 4) 'TETRIS!',
+          if (e.perfectClear) 'PERFECT CLEAR!',
+          if (e.combo > 1) '${e.combo - 1} COMBO',
+        ];
+        if (parts.isNotEmpty) _showBanner(parts.join('  '));
+      case TetrisEventType.tSpin:
+        _showBanner(e.tSpin == TSpinType.full ? 'T-SPIN' : 'T-SPIN MINI');
+      default:
+        break;
+    }
+  }
 
   void _showBanner(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(
@@ -136,6 +164,7 @@ class _TetrisHomeState extends State<TetrisHome> {
 
   @override
   void dispose() {
+    _events?.cancel();
     _game.dispose();
     super.dispose();
   }
@@ -150,33 +179,33 @@ class _TetrisHomeState extends State<TetrisHome> {
           backgroundColor: bg,
           body: switch (_screen) {
             _Screen.menu => _MenuScreen(
-                theme: theme,
-                highScore: _highScore,
-                onStart: _startGame,
-                onStats: () => setState(() => _screen = _Screen.stats),
-                onCycleTheme: widget.onCycleTheme,
-                activeTheme: widget.activeTheme,
-              ),
+              theme: theme,
+              highScore: _highScore,
+              onStart: _startGame,
+              onStats: () => setState(() => _screen = _Screen.stats),
+              onCycleTheme: widget.onCycleTheme,
+              activeTheme: widget.activeTheme,
+            ),
             _Screen.game => _GameScreen(
-                game: _game,
-                theme: theme,
-                onMenu: _goToMenu,
-                onRestart: _restartGame,
-              ),
+              game: _game,
+              theme: theme,
+              onMenu: _goToMenu,
+              onRestart: _restartGame,
+            ),
             _Screen.gameOver => _GameOverScreen(
-                theme: theme,
-                score: _game.state.scoreState.score,
-                level: _game.state.levelState.level,
-                lines: _game.state.levelState.linesCleared,
-                highScore: _highScore,
-                onRestart: _restartGame,
-                onMenu: () => setState(() => _screen = _Screen.menu),
-              ),
+              theme: theme,
+              score: _game.state.scoreState.score,
+              level: _game.state.levelState.level,
+              lines: _game.state.levelState.linesCleared,
+              highScore: _highScore,
+              onRestart: _restartGame,
+              onMenu: () => setState(() => _screen = _Screen.menu),
+            ),
             _Screen.stats => _StatsScreen(
-                theme: theme,
-                statistics: _game.statistics,
-                onBack: () => setState(() => _screen = _Screen.menu),
-              ),
+              theme: theme,
+              statistics: _statistics,
+              onBack: () => setState(() => _screen = _Screen.menu),
+            ),
           },
         );
       },
@@ -233,7 +262,7 @@ class _MenuScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'flutter_tetris',
+              'tetris_engine',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
@@ -252,7 +281,11 @@ class _MenuScreen extends StatelessWidget {
               const SizedBox(height: 40),
             ],
             _MenuButton(
-                label: 'START', onTap: onStart, theme: theme, primary: true),
+              label: 'START',
+              onTap: onStart,
+              theme: theme,
+              primary: true,
+            ),
             const SizedBox(height: 12),
             _MenuButton(label: 'STATISTICS', onTap: onStats, theme: theme),
             const SizedBox(height: 12),
@@ -411,18 +444,20 @@ class _PortraitLayout extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: onMenu,
-                child: Icon(Icons.arrow_back_ios_new,
-                    size: 18,
-                    color: theme == defaultTetrisTheme
-                        ? Colors.black54
-                        : Colors.white38),
+                child: Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 18,
+                  color: theme == defaultTetrisTheme
+                      ? Colors.black54
+                      : Colors.white38,
+                ),
               ),
               const Spacer(),
               ScorePanel(game: game, theme: theme),
               const Spacer(),
               ListenableBuilder(
                 listenable: game,
-                builder: (_, __) => GestureDetector(
+                builder: (_, _) => GestureDetector(
                   onTap: () => game.state.status == TetrisGameStatus.playing
                       ? game.pause()
                       : game.resume(),
@@ -474,7 +509,10 @@ class _PortraitLayout extends StatelessWidget {
                   enableKeyboard: true,
                   enableGestures: true,
                   pauseOverlayBuilder: (ctx, resume) => _CustomPauseOverlay(
-                      theme: theme, onResume: resume, onMenu: onMenu),
+                    theme: theme,
+                    onResume: resume,
+                    onMenu: onMenu,
+                  ),
                 ),
               ),
 
@@ -487,8 +525,8 @@ class _PortraitLayout extends StatelessWidget {
           ),
         ),
 
-        // Mobile D-pad
-        _MobileDpad(game: game, theme: theme),
+        // On-screen controls from the package
+        TetrisControlPad(game: game, theme: theme, buttonSize: 38),
       ],
     );
   }
@@ -529,10 +567,7 @@ class _LandscapeLayout extends StatelessWidget {
               const SizedBox(height: 12),
               GestureDetector(
                 onTap: onMenu,
-                child: Text(
-                  'MENU',
-                  style: theme.labelStyle,
-                ),
+                child: Text('MENU', style: theme.labelStyle),
               ),
             ],
           ),
@@ -550,7 +585,10 @@ class _LandscapeLayout extends StatelessWidget {
               enableKeyboard: true,
               enableGestures: true,
               pauseOverlayBuilder: (ctx, resume) => _CustomPauseOverlay(
-                  theme: theme, onResume: resume, onMenu: onMenu),
+                theme: theme,
+                onResume: resume,
+                onMenu: onMenu,
+              ),
             ),
           ),
         ),
@@ -610,8 +648,11 @@ class _OverlayBtn extends StatelessWidget {
   final VoidCallback onTap;
   final bool filled;
 
-  const _OverlayBtn(
-      {required this.label, required this.onTap, this.filled = false});
+  const _OverlayBtn({
+    required this.label,
+    required this.onTap,
+    this.filled = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -634,89 +675,6 @@ class _OverlayBtn extends StatelessWidget {
             color: filled ? Colors.black : Colors.white,
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ─── Mobile D-pad ─────────────────────────────────────────────────────────────
-
-class _MobileDpad extends StatelessWidget {
-  final TetrisGame game;
-  final TetrisTheme theme;
-
-  const _MobileDpad({required this.game, required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: theme.panelBackground,
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Left / Right
-          Row(
-            children: [
-              _DpadBtn(icon: Icons.chevron_left, onTap: game.moveLeft),
-              const SizedBox(width: 8),
-              _DpadBtn(icon: Icons.chevron_right, onTap: game.moveRight),
-            ],
-          ),
-          // Rotate
-          Row(
-            children: [
-              _DpadBtn(icon: Icons.rotate_left, onTap: game.rotateCCW),
-              const SizedBox(width: 8),
-              _DpadBtn(icon: Icons.rotate_right, onTap: game.rotateCW),
-            ],
-          ),
-          // Hold + drops
-          Row(
-            children: [
-              _DpadBtn(icon: Icons.save_outlined, onTap: game.holdPiece),
-              const SizedBox(width: 8),
-              _DpadBtn(icon: Icons.keyboard_arrow_down, onTap: game.softDrop),
-              const SizedBox(width: 8),
-              _DpadBtn(icon: Icons.vertical_align_bottom, onTap: game.hardDrop),
-            ],
-          ),
-          // Pause / resume
-          ListenableBuilder(
-            listenable: game,
-            builder: (_, __) => _DpadBtn(
-              icon: game.state.status == TetrisGameStatus.playing
-                  ? Icons.pause
-                  : Icons.play_arrow,
-              onTap: () => game.state.status == TetrisGameStatus.playing
-                  ? game.pause()
-                  : game.resume(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DpadBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _DpadBtn({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: Colors.white.withAlpha(12),
-          border: Border.all(color: Colors.white.withAlpha(30)),
-        ),
-        child: Icon(icon, color: Colors.white70, size: 20),
       ),
     );
   }
@@ -803,8 +761,11 @@ class _StatRow extends StatelessWidget {
   final String value;
   final TetrisTheme theme;
 
-  const _StatRow(
-      {required this.label, required this.value, required this.theme});
+  const _StatRow({
+    required this.label,
+    required this.value,
+    required this.theme,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -844,8 +805,11 @@ class _StatsScreen extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: onBack,
-                  child: Icon(Icons.arrow_back_ios_new,
-                      size: 18, color: fg.withAlpha(120)),
+                  child: Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 18,
+                    color: fg.withAlpha(120),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Text(

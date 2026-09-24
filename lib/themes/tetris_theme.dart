@@ -44,19 +44,18 @@ class TetrisTheme {
     TextStyle? labelStyle,
     TextStyle? valueStyle,
     Color? overlayBackground,
-  }) =>
-      TetrisTheme(
-        boardBackground: boardBackground ?? this.boardBackground,
-        boardBorderColor: boardBorderColor ?? this.boardBorderColor,
-        boardBorderWidth: boardBorderWidth ?? this.boardBorderWidth,
-        gridLineColor: gridLineColor ?? this.gridLineColor,
-        showGridLines: showGridLines ?? this.showGridLines,
-        tetrominoColors: tetrominoColors ?? this.tetrominoColors,
-        ghostCellColor: ghostCellColor ?? this.ghostCellColor,
-        cellBorderRadius: cellBorderRadius ?? this.cellBorderRadius,
-        panelBackground: panelBackground ?? this.panelBackground,
-        labelStyle: labelStyle ?? this.labelStyle,
-        valueStyle: valueStyle ?? this.valueStyle,
-        overlayBackground: overlayBackground ?? this.overlayBackground,
-      );
+  }) => TetrisTheme(
+    boardBackground: boardBackground ?? this.boardBackground,
+    boardBorderColor: boardBorderColor ?? this.boardBorderColor,
+    boardBorderWidth: boardBorderWidth ?? this.boardBorderWidth,
+    gridLineColor: gridLineColor ?? this.gridLineColor,
+    showGridLines: showGridLines ?? this.showGridLines,
+    tetrominoColors: tetrominoColors ?? this.tetrominoColors,
+    ghostCellColor: ghostCellColor ?? this.ghostCellColor,
+    cellBorderRadius: cellBorderRadius ?? this.cellBorderRadius,
+    panelBackground: panelBackground ?? this.panelBackground,
+    labelStyle: labelStyle ?? this.labelStyle,
+    valueStyle: valueStyle ?? this.valueStyle,
+    overlayBackground: overlayBackground ?? this.overlayBackground,
+  );
 }

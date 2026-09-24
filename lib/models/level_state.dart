@@ -10,12 +10,15 @@ class LevelState {
     this.linesUntilNextLevel = 10,
   });
 
-  LevelState copyWith({int? level, int? linesCleared, int? linesUntilNextLevel}) =>
-      LevelState(
-        level: level ?? this.level,
-        linesCleared: linesCleared ?? this.linesCleared,
-        linesUntilNextLevel: linesUntilNextLevel ?? this.linesUntilNextLevel,
-      );
+  LevelState copyWith({
+    int? level,
+    int? linesCleared,
+    int? linesUntilNextLevel,
+  }) => LevelState(
+    level: level ?? this.level,
+    linesCleared: linesCleared ?? this.linesCleared,
+    linesUntilNextLevel: linesUntilNextLevel ?? this.linesUntilNextLevel,
+  );
 
   /// Gravity delay in milliseconds for the current level.
   int get gravityMs {

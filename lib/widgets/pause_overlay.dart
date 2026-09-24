@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../themes/tetris_theme.dart';
 import '../themes/default_theme.dart';
 
+/// Default overlay shown by `TetrisBoard` while paused. Replace it with
+/// `TetrisBoard.pauseOverlayBuilder`.
 class TetrisPauseOverlay extends StatelessWidget {
   final VoidCallback onResume;
   final TetrisTheme? theme;
@@ -29,13 +31,19 @@ class TetrisPauseOverlay extends StatelessWidget {
             GestureDetector(
               onTap: onResume,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.white, width: 1.5),
                 ),
                 child: Text(
                   'RESUME',
-                  style: t.labelStyle.copyWith(color: Colors.white, fontSize: 12),
+                  style: t.labelStyle.copyWith(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ),

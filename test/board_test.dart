@@ -13,12 +13,13 @@ void main() {
     });
 
     test('full row is cleared', () {
-      // Build a 4×4 board with row 3 fully filled using the I-piece
+      // Build a 4×4 board with row 3 fully filled using the I-piece.
+      // A flat I piece occupies the row below its anchor.
       var board = BoardState(rows: 4, cols: 4);
       final piece = Tetromino(
         type: TetrominoType.I,
         rotation: 0,
-        position: const Position(3, 0),
+        position: const Position(2, 0),
       );
       board = board.withPieceLocked(piece);
 
@@ -35,12 +36,37 @@ void main() {
         final piece = Tetromino(
           type: TetrominoType.I,
           rotation: 0,
-          position: Position(row, 0),
+          position: Position(row - 1, 0),
         );
         board = board.withPieceLocked(piece);
       }
-      final (_, count) = board.clearLines();
+      final (cleared, count) = board.clearLines();
       expect(count, 2);
+      expect(cleared.isEmpty, isTrue);
     });
+
+    test('rows above a cleared row shift down', () {
+      var board = BoardState(rows: 4, cols: 4);
+      board = board.withPieceLocked(
+        Tetromino(type: TetrominoType.O, position: const Position(1, 0)),
+      );
+      board = board.withPieceLocked(
+        Tetromino(type: TetrominoType.O, position: const Position(2, 2)),
+      );
+      // Row 2 is now full (cols 0-1 from the first O, 2-3 from the second).
+      final (cleared, count) = board.clearLines();
+      expect(count, 1);
+      expect(cleared.cellAt(2, 0).filled, isTrue);
+      expect(cleared.cellAt(3, 2).filled, isTrue);
+      expect(cleared.cellAt(1, 0).filled, isFalse);
+    });
+  });
+
+  test('JSON round trip preserves the grid', () {
+    final board = BoardState(rows: 4, cols: 4).withPieceLocked(
+      Tetromino(type: TetrominoType.T, position: const Position(1, 0)),
+    );
+    final restored = BoardState.fromJson(board.toJson());
+    expect(restored.toJson(), board.toJson());
   });
 }

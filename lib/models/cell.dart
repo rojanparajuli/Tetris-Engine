@@ -22,10 +22,7 @@ class Cell {
   @override
   int get hashCode => Object.hash(filled, type);
 
-  Map<String, dynamic> toJson() => {
-    'filled': filled,
-    'type': type?.index,
-  };
+  Map<String, dynamic> toJson() => {'filled': filled, 'type': type?.index};
 
   factory Cell.fromJson(Map<String, dynamic> json) => Cell(
     filled: json['filled'] as bool,
