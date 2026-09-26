@@ -169,45 +169,63 @@ class _TetrisHomeState extends State<TetrisHome> {
     super.dispose();
   }
 
+  /// Per-level colors built on top of the selected theme.
+  LevelThemes? _levelThemes;
+
+  LevelThemes _levelThemesFor(TetrisTheme base) {
+    final cached = _levelThemes;
+    if (cached != null && cached.base == base) return cached;
+    return _levelThemes = LevelThemes(base: base);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<TetrisTheme>(
       valueListenable: widget.themeNotifier,
       builder: (context, theme, _) {
-        final bg = theme.boardBackground;
-        return Scaffold(
-          backgroundColor: bg,
-          body: switch (_screen) {
-            _Screen.menu => _MenuScreen(
-              theme: theme,
-              highScore: _highScore,
-              onStart: _startGame,
-              onStats: () => setState(() => _screen = _Screen.stats),
-              onCycleTheme: widget.onCycleTheme,
-              activeTheme: widget.activeTheme,
-            ),
-            _Screen.game => _GameScreen(
-              game: _game,
-              theme: theme,
-              onMenu: _goToMenu,
-              onRestart: _restartGame,
-            ),
-            _Screen.gameOver => _GameOverScreen(
-              theme: theme,
-              score: _game.state.scoreState.score,
-              level: _game.state.levelState.level,
-              lines: _game.state.levelState.linesCleared,
-              highScore: _highScore,
-              onRestart: _restartGame,
-              onMenu: () => setState(() => _screen = _Screen.menu),
-            ),
-            _Screen.stats => _StatsScreen(
-              theme: theme,
-              statistics: _statistics,
-              onBack: () => setState(() => _screen = _Screen.menu),
-            ),
-          },
+        if (_screen != _Screen.game) return _buildScreen(theme);
+        // Colors change every level while playing.
+        return LevelThemeBuilder(
+          game: _game,
+          levelThemes: _levelThemesFor(theme),
+          builder: (context, levelTheme, _) => _buildScreen(levelTheme),
         );
+      },
+    );
+  }
+
+  Widget _buildScreen(TetrisTheme theme) {
+    return Scaffold(
+      backgroundColor: theme.boardBackground,
+      body: switch (_screen) {
+        _Screen.menu => _MenuScreen(
+          theme: theme,
+          highScore: _highScore,
+          onStart: _startGame,
+          onStats: () => setState(() => _screen = _Screen.stats),
+          onCycleTheme: widget.onCycleTheme,
+          activeTheme: widget.activeTheme,
+        ),
+        _Screen.game => _GameScreen(
+          game: _game,
+          theme: theme,
+          onMenu: _goToMenu,
+          onRestart: _restartGame,
+        ),
+        _Screen.gameOver => _GameOverScreen(
+          theme: theme,
+          score: _game.state.scoreState.score,
+          level: _game.state.levelState.level,
+          lines: _game.state.levelState.linesCleared,
+          highScore: _highScore,
+          onRestart: _restartGame,
+          onMenu: () => setState(() => _screen = _Screen.menu),
+        ),
+        _Screen.stats => _StatsScreen(
+          theme: theme,
+          statistics: _statistics,
+          onBack: () => setState(() => _screen = _Screen.menu),
+        ),
       },
     );
   }
@@ -396,6 +414,9 @@ class _ControlsLegend extends StatelessWidget {
 
 // ─── Game screen ─────────────────────────────────────────────────────────────
 
+bool _isLight(TetrisTheme theme) =>
+    theme.boardBackground.computeLuminance() > 0.5;
+
 class _GameScreen extends StatelessWidget {
   final TetrisGame game;
   final TetrisTheme theme;
@@ -447,9 +468,7 @@ class _PortraitLayout extends StatelessWidget {
                 child: Icon(
                   Icons.arrow_back_ios_new,
                   size: 18,
-                  color: theme == defaultTetrisTheme
-                      ? Colors.black54
-                      : Colors.white38,
+                  color: _isLight(theme) ? Colors.black54 : Colors.white38,
                 ),
               ),
               const Spacer(),
@@ -466,9 +485,7 @@ class _PortraitLayout extends StatelessWidget {
                         ? Icons.pause
                         : Icons.play_arrow,
                     size: 22,
-                    color: theme == defaultTetrisTheme
-                        ? Colors.black54
-                        : Colors.white38,
+                    color: _isLight(theme) ? Colors.black54 : Colors.white38,
                   ),
                 ),
               ),

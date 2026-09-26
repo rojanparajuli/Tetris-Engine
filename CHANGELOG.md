@@ -1,3 +1,11 @@
+## Unreleased
+
+### New features
+- **Level colors**: `LevelThemes` and `LevelPalette` change piece and board
+  colors every level, with ten built-in palettes that cycle like classic
+  Tetris. `LevelThemeBuilder` rebuilds a layout with the current level's
+  theme. The example app now uses them during play.
+
 ## 1.2.0
 
 ### New features
