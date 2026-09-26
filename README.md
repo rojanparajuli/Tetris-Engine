@@ -23,7 +23,8 @@ macOS.
 - **Input**: keyboard with remappable keys (desktop/web), swipe gestures and
   auto-repeating touch buttons (mobile)
 - **Events stream** for sound effects, haptics and animations
-- **Themes**: light, dark and colorblind-safe themes, all customizable
+- **Themes**: light, dark and colorblind-safe themes, all customizable, plus
+  per-level color palettes that change as the player levels up
 - **Seeded games and exact replays**: record a game as JSON and play it back
   move for move
 - **Save and restore**: serialize the full game state to any storage
@@ -138,6 +139,43 @@ final myTheme = darkTetrisTheme.copyWith(
   ),
 );
 ```
+
+### Level colors
+
+As in classic Tetris, colors can change every level. `LevelThemes` applies a
+palette per level on top of a base theme (ten built-in palettes that cycle),
+and `LevelThemeBuilder` rebuilds only when the level's theme changes:
+
+```dart
+final levelThemes = LevelThemes(base: darkTetrisTheme);
+
+LevelThemeBuilder(
+  game: game,
+  levelThemes: levelThemes,
+  builder: (context, theme, _) => Column(
+    children: [
+      LevelPanel(game: game, theme: theme),
+      Expanded(child: TetrisBoard(game: game, theme: theme)),
+    ],
+  ),
+);
+
+// Change palette every 3 levels, or supply your own palettes
+LevelThemes(
+  base: darkTetrisTheme,
+  levelsPerPalette: 3,
+  palettes: [
+    LevelPalette.fromFills({for (final t in TetrominoType.values) t: Colors.cyan}),
+    LevelPalette.fromFills({for (final t in TetrominoType.values) t: Colors.pink}),
+  ],
+);
+```
+
+With a light base theme only the piece colors change by default; pass
+`recolorBoard: true` to also use the palettes' dark board colors.
+
+Levels advance every `linesPerLevel` cleared lines (default 10) and gravity
+speeds up with each level.
 
 ## Replays
 

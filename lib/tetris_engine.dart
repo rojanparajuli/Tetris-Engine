@@ -55,6 +55,7 @@ export 'themes/tetromino_colors.dart';
 export 'themes/default_theme.dart';
 export 'themes/dark_theme.dart';
 export 'themes/colorblind_theme.dart';
+export 'themes/level_themes.dart';
 
 // Widgets
 export 'widgets/tetris_board.dart';
@@ -62,6 +63,7 @@ export 'widgets/next_piece_preview.dart';
 export 'widgets/hold_piece_preview.dart';
 export 'widgets/score_panel.dart';
 export 'widgets/level_panel.dart';
+export 'widgets/level_theme_builder.dart';
 export 'widgets/lines_cleared_panel.dart';
 export 'widgets/game_over_overlay.dart';
 export 'widgets/pause_overlay.dart';
