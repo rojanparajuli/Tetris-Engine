@@ -34,7 +34,7 @@ macOS.
 
 ```yaml
 dependencies:
-  tetris_engine: ^1.2.0
+  tetris_engine: ^1.3.0
 ```
 
 ## Quick start
