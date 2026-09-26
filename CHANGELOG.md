@@ -1,4 +1,4 @@
-## Unreleased
+## 1.3.0
 
 ### New features
 - **Level colors**: `LevelThemes` and `LevelPalette` change piece and board
