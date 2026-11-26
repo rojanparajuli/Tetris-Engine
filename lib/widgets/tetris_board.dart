@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import '../engine/tetris_game.dart';
 import '../models/game_state.dart';
+import '../models/game_mode.dart';
 import '../models/tetromino.dart';
 import '../themes/tetris_theme.dart';
 import '../themes/default_theme.dart';
@@ -179,6 +180,10 @@ class _TetrisBoardState extends State<TetrisBoard> {
                   TetrisGameOverOverlay(
                     score: state.scoreState.score,
                     onRestart: widget.game.restart,
+                    endReason: state.endReason,
+                    time: state.endReason == GameEndReason.goalReached
+                        ? widget.game.playTime
+                        : null,
                   ),
           ],
         );
@@ -326,7 +331,7 @@ class _BoardPainter extends CustomPainter {
       );
       // Highlight shine
       final shinePaint = Paint()
-        ..color = Colors.white.withAlpha(60)
+        ..color = const Color(0x3CFFFFFF)
         ..style = PaintingStyle.fill;
       canvas.drawRRect(
         RRect.fromRectAndRadius(

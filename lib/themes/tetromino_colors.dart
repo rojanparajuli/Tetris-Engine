@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import '../models/tetromino.dart';
 
 /// Per-type fill and border colors for tetromino cells.
@@ -8,8 +8,9 @@ class TetrominoColors {
 
   const TetrominoColors({required this.fill, required this.border});
 
-  Color fillFor(TetrominoType type) => fill[type] ?? Colors.grey;
-  Color borderFor(TetrominoType type) => border[type] ?? Colors.grey.shade700;
+  Color fillFor(TetrominoType type) => fill[type] ?? const Color(0xFF9E9E9E);
+  Color borderFor(TetrominoType type) =>
+      border[type] ?? const Color(0xFF616161);
 
   /// Guideline colors
   static const TetrominoColors guideline = TetrominoColors(

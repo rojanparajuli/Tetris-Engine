@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'tetromino_colors.dart';
 
 /// Full visual theme for the Tetris board and UI panels.

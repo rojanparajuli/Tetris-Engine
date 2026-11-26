@@ -1,3 +1,39 @@
+## 1.4.0
+
+### New features
+- **Game modes**: `TetrisGameMode.endless` (default), `marathon` (150 lines),
+  `sprint` (40 lines against the clock) and `ultra` (2-minute score attack),
+  or a custom `TetrisGameMode(name:, lineGoal:, timeLimit:)`. Choose one with
+  `TetrisGame(mode: …)` or `start(mode: …)`.
+- `GameState.endReason` and `TetrisEvent.endReason` (`toppedOut`,
+  `goalReached`, `timeUp`) tell how a game ended. Every ending still uses
+  `TetrisGameStatus.gameOver`, so existing code keeps working.
+- `TetrisGame.linesRemaining`, `timeRemaining` and `expireTimeLimit()` (for
+  custom game loops; recorded in replays as `timeUp`).
+- `GameModePanel` widget: a clock that counts down in timed modes and up
+  otherwise, plus LINES LEFT for line-goal modes.
+- `TetrisGameOverOverlay` shows COMPLETE or TIME UP, and the final time for
+  a completed line goal. New `endReason` and `time` parameters, plus
+  `TetrisGameOverOverlay.formatTime`.
+- `TetrisStatistics` keeps the best time and best score per mode
+  (`bestTime(mode)`, `bestScore(mode)`, saved in `toJson`).
+- The example app has a mode picker, the mode clock and the time on the
+  results screen.
+
+### Changes
+- The package no longer imports `package:flutter/material.dart` (deprecated
+  since Flutter 3.47); it now depends only on `package:flutter/widgets.dart`.
+  Minimum supported Flutter is still 3.32.
+- `TetrisControlPad` draws its own button symbols (`TetrisPadGlyph`,
+  `TetrisPadGlyphIcon`) instead of using Material `Icons`, so the buttons no
+  longer show empty boxes in apps without `uses-material-design: true`.
+  `TetrisPadButton` takes a `glyph`, or an `icon` as before.
+- The example app uses `package:material_ui` and requires Flutter 3.47+.
+
+### Bug fixes
+- `TetrisGame.toJson()` now saves play time (and the mode), so
+  `loadFromJson` no longer resets `playTime` to zero.
+
 ## 1.3.0
 
 ### New features

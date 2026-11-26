@@ -1,6 +1,11 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  exclude:
+    - build/**
+    # The example app needs a newer Flutter than the package; CI analyzes it
+    # separately.
+    - example/**
   language:
     strict-casts: true
     strict-raw-types: true

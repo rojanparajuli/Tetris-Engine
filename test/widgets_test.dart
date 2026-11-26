@@ -1,11 +1,18 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tetris_engine/tetris_engine.dart';
 
-Widget host(Widget child) => MaterialApp(
-  home: Scaffold(body: SizedBox(width: 200, child: child)),
+Widget host(Widget child) => Directionality(
+  textDirection: TextDirection.ltr,
+  child: Align(
+    alignment: Alignment.topLeft,
+    child: SizedBox(width: 200, child: child),
+  ),
 );
+
+Finder padButton(TetrisPadGlyph glyph) =>
+    find.byWidgetPredicate((w) => w is TetrisPadButton && w.glyph == glyph);
 
 void main() {
   testWidgets('TetrisBoard renders and handles keyboard input', (tester) async {
@@ -106,18 +113,19 @@ void main() {
     final game = TetrisGame(seed: 1)..useInternalClock = false;
     game.start();
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: TetrisControlPad(game: game)),
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: TetrisControlPad(game: game),
       ),
     );
 
     final col = game.state.activePiece!.position.col;
-    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.tap(padButton(TetrisPadGlyph.moveLeft));
     expect(game.state.activePiece!.position.col, col - 1);
 
     // Holding right: one move, then repeats after the delay.
     final gesture = await tester.startGesture(
-      tester.getCenter(find.byIcon(Icons.chevron_right)),
+      tester.getCenter(padButton(TetrisPadGlyph.moveRight)),
     );
     await tester.pump(const Duration(milliseconds: 100));
     expect(game.state.activePiece!.position.col, col);
@@ -126,10 +134,10 @@ void main() {
     expect(game.state.activePiece!.position.col, greaterThan(col));
     await gesture.up();
 
-    await tester.tap(find.byIcon(Icons.pause));
+    await tester.tap(padButton(TetrisPadGlyph.pause));
     await tester.pump();
     expect(game.state.status, TetrisGameStatus.paused);
-    expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+    expect(padButton(TetrisPadGlyph.play), findsOneWidget);
     game.dispose();
   });
 }

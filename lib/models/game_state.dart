@@ -2,6 +2,7 @@ import 'board_state.dart';
 import 'tetromino.dart';
 import 'score_state.dart';
 import 'level_state.dart';
+import 'game_mode.dart';
 
 /// Lifecycle of a game.
 enum TetrisGameStatus { idle, playing, paused, gameOver }
@@ -29,6 +30,10 @@ class GameState {
   final LevelState levelState;
   final TetrisGameStatus status;
 
+  /// How the game ended, once [status] is [TetrisGameStatus.gameOver].
+  /// Null while the game is running.
+  final GameEndReason? endReason;
+
   const GameState({
     required this.board,
     this.activePiece,
@@ -39,6 +44,7 @@ class GameState {
     required this.scoreState,
     required this.levelState,
     this.status = TetrisGameStatus.idle,
+    this.endReason,
   });
 
   GameState copyWith({
@@ -51,6 +57,7 @@ class GameState {
     ScoreState? scoreState,
     LevelState? levelState,
     TetrisGameStatus? status,
+    GameEndReason? endReason,
     bool clearActive = false,
     bool clearGhost = false,
     bool clearHeld = false,
@@ -64,6 +71,7 @@ class GameState {
     scoreState: scoreState ?? this.scoreState,
     levelState: levelState ?? this.levelState,
     status: status ?? this.status,
+    endReason: endReason ?? this.endReason,
   );
 
   Map<String, dynamic> toJson() => {
@@ -75,6 +83,7 @@ class GameState {
     'scoreState': scoreState.toJson(),
     'levelState': levelState.toJson(),
     'status': status.index,
+    if (endReason != null) 'endReason': endReason!.name,
   };
 
   factory GameState.fromJson(Map<String, dynamic> json) => GameState(
@@ -92,5 +101,9 @@ class GameState {
     scoreState: ScoreState.fromJson(json['scoreState'] as Map<String, dynamic>),
     levelState: LevelState.fromJson(json['levelState'] as Map<String, dynamic>),
     status: TetrisGameStatus.values[json['status'] as int],
+    endReason: switch (json['endReason']) {
+      final String name => GameEndReason.values.byName(name),
+      _ => null,
+    },
   );
 }

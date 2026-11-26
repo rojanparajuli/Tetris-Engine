@@ -1,3 +1,4 @@
+import 'game_mode.dart';
 import 'tetromino.dart';
 
 /// The kind of [TetrisEvent] emitted by a game.
@@ -22,6 +23,8 @@ enum TetrisEventType {
   /// A T-Spin was performed without clearing any lines.
   tSpin,
   levelUp,
+
+  /// The game ended. See [TetrisEvent.endReason] for how.
   gameOver,
 }
 
@@ -61,6 +64,9 @@ class TetrisEvent {
   /// Current combo count after this event.
   final int combo;
 
+  /// How the game ended, for [TetrisEventType.gameOver].
+  final GameEndReason? endReason;
+
   const TetrisEvent(
     this.type, {
     this.piece,
@@ -71,6 +77,7 @@ class TetrisEvent {
     this.perfectClear = false,
     this.backToBack = false,
     this.combo = 0,
+    this.endReason,
   });
 
   @override
@@ -82,5 +89,6 @@ class TetrisEvent {
       '${level > 0 ? ', level: $level' : ''}'
       '${tSpin != TSpinType.none ? ', tSpin: ${tSpin.name}' : ''}'
       '${perfectClear ? ', perfectClear' : ''}'
-      '${backToBack ? ', backToBack' : ''})';
+      '${backToBack ? ', backToBack' : ''}'
+      '${endReason != null ? ', endReason: ${endReason!.name}' : ''})';
 }

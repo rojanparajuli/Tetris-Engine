@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import '../themes/tetris_theme.dart';
 import '../themes/default_theme.dart';
 
@@ -23,7 +23,7 @@ class TetrisPauseOverlay extends StatelessWidget {
               'PAUSED',
               style: t.valueStyle.copyWith(
                 fontSize: 28,
-                color: Colors.white,
+                color: const Color(0xFFFFFFFF),
                 letterSpacing: 3,
               ),
             ),
@@ -36,12 +36,15 @@ class TetrisPauseOverlay extends StatelessWidget {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white, width: 1.5),
+                  border: Border.all(
+                    color: const Color(0xFFFFFFFF),
+                    width: 1.5,
+                  ),
                 ),
                 child: Text(
                   'RESUME',
                   style: t.labelStyle.copyWith(
-                    color: Colors.white,
+                    color: const Color(0xFFFFFFFF),
                     fontSize: 12,
                   ),
                 ),

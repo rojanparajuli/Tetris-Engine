@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import '../engine/tetris_game.dart';
 import '../models/game_state.dart';
 import '../themes/tetris_theme.dart';
 import '../themes/default_theme.dart';
+import 'tetris_pad_glyph.dart';
 
 /// On-screen buttons for touch devices.
 ///
@@ -45,15 +46,15 @@ class TetrisControlPad extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = theme ?? defaultTetrisTheme;
-    final fg = t.valueStyle.color ?? Colors.white;
+    final fg = t.valueStyle.color ?? Color(0xFFFFFFFF);
 
     Widget button(
-      IconData icon,
+      TetrisPadGlyph glyph,
       String tooltip,
       VoidCallback action, {
       bool repeat = false,
     }) => TetrisPadButton(
-      icon: icon,
+      glyph: glyph,
       tooltip: tooltip,
       onPressed: action,
       size: buttonSize,
@@ -76,14 +77,14 @@ class TetrisControlPad extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               button(
-                Icons.chevron_left,
+                TetrisPadGlyph.moveLeft,
                 'Move left',
                 game.moveLeft,
                 repeat: true,
               ),
               gap,
               button(
-                Icons.chevron_right,
+                TetrisPadGlyph.moveRight,
                 'Move right',
                 game.moveRight,
                 repeat: true,
@@ -94,27 +95,31 @@ class TetrisControlPad extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               button(
-                Icons.rotate_left,
+                TetrisPadGlyph.rotateCCW,
                 'Rotate counter-clockwise',
                 game.rotateCCW,
               ),
               gap,
-              button(Icons.rotate_right, 'Rotate clockwise', game.rotateCW),
+              button(
+                TetrisPadGlyph.rotateCW,
+                'Rotate clockwise',
+                game.rotateCW,
+              ),
             ],
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              button(Icons.swap_vert, 'Hold', game.holdPiece),
+              button(TetrisPadGlyph.hold, 'Hold', game.holdPiece),
               gap,
               button(
-                Icons.keyboard_arrow_down,
+                TetrisPadGlyph.softDrop,
                 'Soft drop',
                 game.softDrop,
                 repeat: true,
               ),
               gap,
-              button(Icons.vertical_align_bottom, 'Hard drop', game.hardDrop),
+              button(TetrisPadGlyph.hardDrop, 'Hard drop', game.hardDrop),
             ],
           ),
           if (showPauseButton)
@@ -123,7 +128,7 @@ class TetrisControlPad extends StatelessWidget {
               builder: (_, _) {
                 final playing = game.state.status == TetrisGameStatus.playing;
                 return button(
-                  playing ? Icons.pause : Icons.play_arrow,
+                  playing ? TetrisPadGlyph.pause : TetrisPadGlyph.play,
                   playing ? 'Pause' : 'Resume',
                   game.togglePause,
                 );
@@ -139,7 +144,15 @@ class TetrisControlPad extends StatelessWidget {
 ///
 /// Used by [TetrisControlPad]; exposed so you can build custom layouts.
 class TetrisPadButton extends StatefulWidget {
-  final IconData icon;
+  /// Built-in symbol to draw. Needs no icon font.
+  final TetrisPadGlyph? glyph;
+
+  /// Icon to show instead of [glyph], e.g. from your own icon set.
+  ///
+  /// Material `Icons` only render when the app sets
+  /// `uses-material-design: true`.
+  final IconData? icon;
+
   final String tooltip;
   final VoidCallback onPressed;
   final double size;
@@ -152,15 +165,19 @@ class TetrisPadButton extends StatefulWidget {
 
   const TetrisPadButton({
     super.key,
-    required this.icon,
+    this.glyph,
+    this.icon,
     required this.tooltip,
     required this.onPressed,
     this.size = 44,
-    this.color = Colors.white,
+    this.color = const Color(0xFFFFFFFF),
     this.repeatDelay,
     this.repeatInterval = const Duration(milliseconds: 50),
     this.hapticFeedback = false,
-  });
+  }) : assert(
+         (glyph == null) != (icon == null),
+         'Provide exactly one of glyph or icon',
+       );
 
   @override
   State<TetrisPadButton> createState() => _TetrisPadButtonState();
@@ -216,11 +233,18 @@ class _TetrisPadButtonState extends State<TetrisPadButton> {
             border: Border.all(color: c.withAlpha(40)),
             borderRadius: BorderRadius.circular(4),
           ),
-          child: Icon(
-            widget.icon,
-            color: c.withAlpha(200),
-            size: widget.size * 0.5,
-          ),
+          alignment: Alignment.center,
+          child: widget.icon != null
+              ? Icon(
+                  widget.icon,
+                  color: c.withAlpha(200),
+                  size: widget.size * 0.5,
+                )
+              : TetrisPadGlyphIcon(
+                  widget.glyph!,
+                  color: c.withAlpha(200),
+                  size: widget.size * 0.5,
+                ),
         ),
       ),
     );

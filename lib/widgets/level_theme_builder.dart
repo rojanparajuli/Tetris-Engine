@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import '../engine/tetris_game.dart';
 import '../themes/level_themes.dart';
 import '../themes/tetris_theme.dart';
