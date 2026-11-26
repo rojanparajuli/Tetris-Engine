@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'tetris_theme.dart';
 import 'tetromino_colors.dart';
 

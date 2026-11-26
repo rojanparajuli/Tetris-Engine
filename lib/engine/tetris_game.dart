@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
+import '../models/game_mode.dart';
 import '../models/game_state.dart';
 import '../models/board_state.dart';
 import '../models/tetris_event.dart';
@@ -49,6 +50,12 @@ class TetrisGame extends ChangeNotifier {
   /// level. Defaults to [LevelState.gravityMs].
   final Duration Function(int level)? gravityCurve;
 
+  TetrisGameMode _mode;
+
+  /// Rules for how the game ends (line goal, time limit). Change it with
+  /// `start(mode: …)`.
+  TetrisGameMode get mode => _mode;
+
   /// Seed passed to the constructor; when null a fresh random seed is picked
   /// for every game.
   final int? _fixedSeed;
@@ -73,7 +80,11 @@ class TetrisGame extends ChangeNotifier {
 
   Timer? _gravityTimer;
   Timer? _lockTimer;
+  Timer? _timeLimitTimer;
   final Stopwatch _playClock = Stopwatch();
+
+  /// Play time carried over from a restored save.
+  Duration _playTimeOffset = Duration.zero;
 
   /// Whether the active piece is resting on the stack with a lock pending.
   bool _lockPending = false;
@@ -122,6 +133,7 @@ class TetrisGame extends ChangeNotifier {
     this.maxLockResets = 15,
     this.gravityCurve,
     int? seed,
+    TetrisGameMode mode = TetrisGameMode.endless,
     TetrisStatistics? statistics,
     this.recorder,
     this.onScoreChanged,
@@ -131,6 +143,7 @@ class TetrisGame extends ChangeNotifier {
   }) : assert(boardRows >= 4 && boardCols >= 4, 'Board must be at least 4×4'),
        assert(startLevel >= 1, 'startLevel must be at least 1'),
        _fixedSeed = seed,
+       _mode = mode,
        _levelSystem = LevelSystem(linesPerLevel: linesPerLevel),
        statistics = statistics ?? TetrisStatistics() {
     _collision = const CollisionSystem();
@@ -168,9 +181,11 @@ class TetrisGame extends ChangeNotifier {
     if (!value) {
       _gravityTimer?.cancel();
       _lockTimer?.cancel();
+      _timeLimitTimer?.cancel();
     } else if (_state.status == TetrisGameStatus.playing) {
       _startGravity();
       if (_lockPending) _startLockTimer();
+      _startTimeLimit();
     }
   }
 
@@ -180,23 +195,45 @@ class TetrisGame extends ChangeNotifier {
       Duration(milliseconds: _state.levelState.gravityMs);
 
   /// Time spent playing the current game, excluding pauses.
-  Duration get playTime => _playClock.elapsed;
+  Duration get playTime => _playTimeOffset + _playClock.elapsed;
+
+  /// Lines still to clear to reach the mode's [TetrisGameMode.lineGoal], or
+  /// null when the mode has no line goal.
+  int? get linesRemaining {
+    final goal = _mode.lineGoal;
+    if (goal == null) return null;
+    return max(0, goal - _state.levelState.linesCleared);
+  }
+
+  /// Play time left before the mode's [TetrisGameMode.timeLimit], or null
+  /// when the mode is not timed.
+  Duration? get timeRemaining {
+    final limit = _mode.timeLimit;
+    if (limit == null) return null;
+    if (_state.endReason == GameEndReason.timeUp) return Duration.zero;
+    final left = limit - playTime;
+    return left.isNegative ? Duration.zero : left;
+  }
 
   // ── Public API ───────────────────────────────────────────────────────────
 
-  /// Starts a new game. Pass [seed] to get a reproducible piece sequence.
-  void start({int? seed}) {
+  /// Starts a new game. Pass [seed] to get a reproducible piece sequence and
+  /// [mode] to change the rules; otherwise the current [mode] is kept.
+  void start({int? seed, TetrisGameMode? mode}) {
     _cancelTimers();
+    if (mode != null) _mode = mode;
     _resetRandomizer(seed);
     _initState();
     _state = _state.copyWith(status: TetrisGameStatus.playing);
     recorder?.startRecording(seed: _seed);
+    _playTimeOffset = Duration.zero;
     _playClock
       ..reset()
       ..start();
     _emit(const TetrisEvent(TetrisEventType.started));
     _spawnPiece();
     _startGravity();
+    _startTimeLimit();
     notifyListeners();
   }
 
@@ -206,6 +243,7 @@ class TetrisGame extends ChangeNotifier {
     _record('pause');
     _gravityTimer?.cancel();
     _lockTimer?.cancel();
+    _timeLimitTimer?.cancel();
     _playClock.stop();
     _state = _state.copyWith(status: TetrisGameStatus.paused);
     _emit(const TetrisEvent(TetrisEventType.paused));
@@ -220,6 +258,7 @@ class TetrisGame extends ChangeNotifier {
     _startGravity();
     if (_lockPending) _startLockTimer();
     _playClock.start();
+    _startTimeLimit();
     _emit(const TetrisEvent(TetrisEventType.resumed));
     notifyListeners();
   }
@@ -314,7 +353,7 @@ class TetrisGame extends ChangeNotifier {
     _emit(TetrisEvent(TetrisEventType.held, piece: piece.type));
 
     if (_boardManager.isBlockOut(_state.board, incoming)) {
-      _gameOver();
+      _gameOver(GameEndReason.toppedOut);
       return;
     }
     _resetPieceTracking(incoming);
@@ -352,6 +391,17 @@ class TetrisGame extends ChangeNotifier {
     if (_collision.canMove(piece, _state.board, 1, 0)) return;
     _record('lock');
     _lockPiece();
+  }
+
+  /// Ends a timed game as if its [TetrisGameMode.timeLimit] ran out.
+  ///
+  /// Called automatically by the internal clock; call it yourself when
+  /// [useInternalClock] is false (for example once [timeRemaining] reaches
+  /// zero). Does nothing if the game is not playing or the mode is not timed.
+  void expireTimeLimit() {
+    if (_state.status != TetrisGameStatus.playing || !_mode.isTimed) return;
+    _record('timeUp');
+    _gameOver(GameEndReason.timeUp);
   }
 
   // ── Internal ─────────────────────────────────────────────────────────────
@@ -440,7 +490,7 @@ class TetrisGame extends ChangeNotifier {
     final piece = Tetromino.spawn(type, boardCols: boardCols);
 
     if (_boardManager.isBlockOut(_state.board, piece)) {
-      _gameOver();
+      _gameOver(GameEndReason.toppedOut);
       return;
     }
 
@@ -522,20 +572,30 @@ class TetrisGame extends ChangeNotifier {
     onScoreChanged?.call(scoreState.score);
     statistics.recordPieceLocked(piece.type);
 
+    final goal = _mode.lineGoal;
+    if (goal != null && levelState.linesCleared >= goal) {
+      _gameOver(GameEndReason.goalReached);
+      return;
+    }
     _spawnPiece();
   }
 
-  void _gameOver() {
+  void _gameOver(GameEndReason reason) {
     _cancelTimers();
     _playClock.stop();
-    _state = _state.copyWith(status: TetrisGameStatus.gameOver);
+    _state = _state.copyWith(
+      status: TetrisGameStatus.gameOver,
+      endReason: reason,
+    );
     statistics.recordGameOver(
       score: _state.scoreState.score,
       level: _state.levelState.level,
-      playTimeMs: _playClock.elapsedMilliseconds,
+      playTimeMs: playTime.inMilliseconds,
+      mode: _mode,
+      endReason: reason,
     );
     recorder?.stopRecording();
-    _emit(const TetrisEvent(TetrisEventType.gameOver));
+    _emit(TetrisEvent(TetrisEventType.gameOver, endReason: reason));
     onGameOver?.call();
     notifyListeners();
   }
@@ -553,6 +613,17 @@ class TetrisGame extends ChangeNotifier {
     _lockTimer = Timer(lockDelay, lockActivePiece);
   }
 
+  void _startTimeLimit() {
+    _timeLimitTimer?.cancel();
+    final left = timeRemaining;
+    if (!_useInternalClock ||
+        left == null ||
+        _state.status != TetrisGameStatus.playing) {
+      return;
+    }
+    _timeLimitTimer = Timer(left, expireTimeLimit);
+  }
+
   void _cancelLockTimer() {
     _lockPending = false;
     _lockTimer?.cancel();
@@ -561,6 +632,7 @@ class TetrisGame extends ChangeNotifier {
 
   void _cancelTimers() {
     _gravityTimer?.cancel();
+    _timeLimitTimer?.cancel();
     _cancelLockTimer();
   }
 
@@ -579,8 +651,13 @@ class TetrisGame extends ChangeNotifier {
 
   // ── Serialization ─────────────────────────────────────────────────────────
 
-  /// Serializes the current game state. Restore it with [loadFromJson].
-  Map<String, dynamic> toJson() => _state.toJson();
+  /// Serializes the current game state, [mode] and [playTime]. Restore it
+  /// with [loadFromJson].
+  Map<String, dynamic> toJson() => {
+    ..._state.toJson(),
+    'mode': _mode.toJson(),
+    'playTimeMs': playTime.inMilliseconds,
+  };
 
   /// Restores a game saved with [toJson].
   ///
@@ -599,6 +676,10 @@ class TetrisGame extends ChangeNotifier {
     _playClock
       ..stop()
       ..reset();
+    _playTimeOffset = Duration(milliseconds: (json['playTimeMs'] as int?) ?? 0);
+    if (json['mode'] case final Map<String, dynamic> mode) {
+      _mode = TetrisGameMode.fromJson(mode);
+    }
 
     // Put the saved queue back so the upcoming pieces match the preview.
     _pieceManager.seed(loaded.nextQueue);

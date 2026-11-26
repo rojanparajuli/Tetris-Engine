@@ -16,10 +16,13 @@ macOS.
   hold, ghost piece, next queue and lock delay with move reset
 - **Scoring**: singles to Tetrises, T-Spins (full and mini), back-to-back,
   combos, perfect clears, soft and hard drop points
+- **Game modes**: Endless, Marathon (150 lines), Sprint (40 lines against the
+  clock) and Ultra (2-minute score attack), or your own line goal and time
+  limit, with best times and scores per mode
 - **Levels and gravity**: configurable start level, lines per level and
   gravity curve
 - **Widgets**: board renderer, next and hold previews, score, level and lines
-  panels, statistics panel, pause and game-over overlays, on-screen control pad
+  panels, game-mode clock, statistics panel, pause and game-over overlays, on-screen control pad
 - **Input**: keyboard with remappable keys (desktop/web), swipe gestures and
   auto-repeating touch buttons (mobile)
 - **Events stream** for sound effects, haptics and animations
@@ -34,7 +37,7 @@ macOS.
 
 ```yaml
 dependencies:
-  tetris_engine: ^1.3.0
+  tetris_engine: ^1.4.0
 ```
 
 ## Quick start
@@ -93,9 +96,48 @@ TetrisGame(
   maxLockResets: 15,
   gravityCurve: (level) => Duration(milliseconds: 800 ~/ level),
   seed: 42,                // same seed → same pieces (e.g. daily challenge)
+  mode: TetrisGameMode.sprint, // see Game modes below
   statistics: myStats,     // share lifetime stats between games
 )
 ```
+
+## Game modes
+
+| Mode | Ends when | Result |
+| --- | --- | --- |
+| `TetrisGameMode.endless` (default) | the stack tops out | score |
+| `TetrisGameMode.marathon` | 150 lines are cleared | score |
+| `TetrisGameMode.sprint` | 40 lines are cleared | time |
+| `TetrisGameMode.ultra` | 2 minutes of play time pass | score |
+
+```dart
+final game = TetrisGame(mode: TetrisGameMode.sprint)..start();
+
+// Switch mode for the next game.
+game.start(mode: TetrisGameMode.ultra);
+
+// Or define your own.
+const sprint20 = TetrisGameMode(name: 'Sprint 20', lineGoal: 20);
+```
+
+Topping out still ends any mode. Every ending sets `status` to
+`TetrisGameStatus.gameOver`, so `onGameOver` fires for all of them, and
+`state.endReason` says how the game ended:
+
+```dart
+switch (game.state.endReason) {
+  case GameEndReason.goalReached: showResult('Cleared in ${game.playTime}');
+  case GameEndReason.timeUp:      showResult('Time! ${game.state.scoreState.score}');
+  case GameEndReason.toppedOut:   showResult('Game over');
+  case null:                      break; // still playing
+}
+```
+
+The `gameOver` event carries the same `endReason`. While playing,
+`game.linesRemaining` and `game.timeRemaining` report goal progress (null when
+the mode has no such goal), and `GameModePanel` shows them as a clock and a
+lines-left counter. `TetrisStatistics` keeps the best time and best score for
+each mode: `statistics.bestTime(TetrisGameMode.sprint)`.
 
 ## Sound effects, haptics and animations
 
@@ -204,6 +246,8 @@ ReplayPlayer(InputController(replayGame)).play(
 // Serialize
 prefs.setString('tetris_save', jsonEncode(game.toJson()));
 
+// The save includes the game mode and play time, so a timed game resumes
+// with the time it had left.
 // Restore (comes back paused, so call resume() to continue)
 game.loadFromJson(jsonDecode(prefs.getString('tetris_save')!));
 game.resume();
@@ -262,6 +306,7 @@ final game = TetrisGame()..useInternalClock = false;
 game.start();
 game.applyGravity();      // one gravity step
 game.lockActivePiece();   // lock if the piece is resting on the stack
+game.expireTimeLimit();   // end a timed mode when your clock runs out
 ```
 
 ## Architecture

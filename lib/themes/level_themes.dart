@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import '../models/tetromino.dart';
 import 'tetris_theme.dart';
 import 'tetromino_colors.dart';
@@ -34,7 +34,7 @@ class LevelPalette {
       fill: fills,
       border: {
         for (final e in fills.entries)
-          e.key: Color.lerp(e.value, Colors.black, 0.4)!,
+          e.key: Color.lerp(e.value, const Color(0xFF000000), 0.4)!,
       },
     ),
     boardBackground: boardBackground,

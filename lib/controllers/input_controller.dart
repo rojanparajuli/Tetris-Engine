@@ -4,7 +4,7 @@ import '../engine/tetris_game.dart';
 ///
 /// Supported actions: `moveLeft`, `moveRight`, `softDrop`, `hardDrop`,
 /// `rotCW`, `rotCCW`, `hold`, `pause` (toggles pause/resume), `resume`,
-/// and the clock actions `gravity` and `lock` used by replays.
+/// and the clock actions `gravity`, `lock` and `timeUp` used by replays.
 class InputController {
   final TetrisGame game;
 
@@ -44,6 +44,9 @@ class InputController {
         break;
       case 'lock':
         game.lockActivePiece();
+        break;
+      case 'timeUp':
+        game.expireTimeLimit();
         break;
     }
   }

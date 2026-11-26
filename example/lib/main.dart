@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:tetris_engine/tetris_engine.dart';
 
@@ -80,6 +80,12 @@ class _TetrisHomeState extends State<TetrisHome> {
   late TetrisGame _game;
   StreamSubscription<TetrisEvent>? _events;
   int _highScore = 0;
+  TetrisGameMode _mode = TetrisGameMode.endless;
+
+  void _cycleMode() {
+    const modes = TetrisGameMode.values;
+    setState(() => _mode = modes[(modes.indexOf(_mode) + 1) % modes.length]);
+  }
 
   /// Shared by every game so lifetime stats survive new games.
   final _statistics = TetrisStatistics();
@@ -148,7 +154,7 @@ class _TetrisHomeState extends State<TetrisHome> {
   void _startGame() {
     _game.dispose();
     _game = _buildGame();
-    _game.start();
+    _game.start(mode: _mode);
     setState(() => _screen = _Screen.game);
   }
 
@@ -201,6 +207,8 @@ class _TetrisHomeState extends State<TetrisHome> {
         _Screen.menu => _MenuScreen(
           theme: theme,
           highScore: _highScore,
+          mode: _mode,
+          onCycleMode: _cycleMode,
           onStart: _startGame,
           onStats: () => setState(() => _screen = _Screen.stats),
           onCycleTheme: widget.onCycleTheme,
@@ -218,6 +226,9 @@ class _TetrisHomeState extends State<TetrisHome> {
           level: _game.state.levelState.level,
           lines: _game.state.levelState.linesCleared,
           highScore: _highScore,
+          endReason: _game.state.endReason,
+          time: _game.playTime,
+          bestTime: _statistics.bestTime(_game.mode),
           onRestart: _restartGame,
           onMenu: () => setState(() => _screen = _Screen.menu),
         ),
@@ -238,6 +249,8 @@ enum _Screen { menu, game, gameOver, stats }
 class _MenuScreen extends StatelessWidget {
   final TetrisTheme theme;
   final int highScore;
+  final TetrisGameMode mode;
+  final VoidCallback onCycleMode;
   final VoidCallback onStart;
   final VoidCallback onStats;
   final VoidCallback onCycleTheme;
@@ -246,6 +259,8 @@ class _MenuScreen extends StatelessWidget {
   const _MenuScreen({
     required this.theme,
     required this.highScore,
+    required this.mode,
+    required this.onCycleMode,
     required this.onStart,
     required this.onStats,
     required this.onCycleTheme,
@@ -303,6 +318,12 @@ class _MenuScreen extends StatelessWidget {
               onTap: onStart,
               theme: theme,
               primary: true,
+            ),
+            const SizedBox(height: 12),
+            _MenuButton(
+              label: 'MODE: ${mode.name.toUpperCase()}',
+              onTap: onCycleMode,
+              theme: theme,
             ),
             const SizedBox(height: 12),
             _MenuButton(label: 'STATISTICS', onTap: onStats, theme: theme),
@@ -510,25 +531,29 @@ class _PortraitLayout extends StatelessWidget {
                     LevelPanel(game: game, theme: theme),
                     const SizedBox(height: 8),
                     LinesClearedPanel(game: game, theme: theme),
+                    const SizedBox(height: 8),
+                    GameModePanel(game: game, theme: theme),
                   ],
                 ),
               ),
 
-              // Board — constrained so it doesn't overflow
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.5,
-                ),
-                child: TetrisBoard(
-                  game: game,
-                  theme: theme,
-                  showGhostPiece: true,
-                  enableKeyboard: true,
-                  enableGestures: true,
-                  pauseOverlayBuilder: (ctx, resume) => _CustomPauseOverlay(
+              // Board — shrinks to leave room for the side panels
+              Flexible(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.5,
+                  ),
+                  child: TetrisBoard(
+                    game: game,
                     theme: theme,
-                    onResume: resume,
-                    onMenu: onMenu,
+                    showGhostPiece: true,
+                    enableKeyboard: true,
+                    enableGestures: true,
+                    pauseOverlayBuilder: (ctx, resume) => _CustomPauseOverlay(
+                      theme: theme,
+                      onResume: resume,
+                      onMenu: onMenu,
+                    ),
                   ),
                 ),
               ),
@@ -581,6 +606,8 @@ class _LandscapeLayout extends StatelessWidget {
               LevelPanel(game: game, theme: theme),
               const SizedBox(height: 8),
               LinesClearedPanel(game: game, theme: theme),
+              const SizedBox(height: 8),
+              GameModePanel(game: game, theme: theme),
               const SizedBox(height: 12),
               GestureDetector(
                 onTap: onMenu,
@@ -705,6 +732,9 @@ class _GameOverScreen extends StatelessWidget {
   final int level;
   final int lines;
   final int highScore;
+  final GameEndReason? endReason;
+  final Duration time;
+  final Duration? bestTime;
   final VoidCallback onRestart;
   final VoidCallback onMenu;
 
@@ -714,6 +744,9 @@ class _GameOverScreen extends StatelessWidget {
     required this.level,
     required this.lines,
     required this.highScore,
+    required this.endReason,
+    required this.time,
+    required this.bestTime,
     required this.onRestart,
     required this.onMenu,
   });
@@ -731,7 +764,11 @@ class _GameOverScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 60),
             Text(
-              'GAME\nOVER',
+              switch (endReason) {
+                GameEndReason.goalReached => 'COMPLETE',
+                GameEndReason.timeUp => 'TIME\nUP',
+                _ => 'GAME\nOVER',
+              },
               style: TextStyle(
                 fontSize: 48,
                 fontWeight: FontWeight.w900,
@@ -757,6 +794,20 @@ class _GameOverScreen extends StatelessWidget {
             _StatRow(label: 'LEVEL', value: level.toString(), theme: theme),
             const SizedBox(height: 12),
             _StatRow(label: 'LINES', value: lines.toString(), theme: theme),
+            const SizedBox(height: 12),
+            _StatRow(
+              label: 'TIME',
+              value: TetrisGameOverOverlay.formatTime(time),
+              theme: theme,
+            ),
+            if (endReason == GameEndReason.goalReached && bestTime != null) ...[
+              const SizedBox(height: 12),
+              _StatRow(
+                label: 'BEST TIME',
+                value: TetrisGameOverOverlay.formatTime(bestTime!),
+                theme: theme,
+              ),
+            ],
             const SizedBox(height: 48),
             _MenuButton(
               label: 'PLAY AGAIN',

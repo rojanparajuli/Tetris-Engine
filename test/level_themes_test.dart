@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tetris_engine/tetris_engine.dart';
 
@@ -36,12 +36,18 @@ void main() {
 
     test('custom palettes and fromFills borders', () {
       final palette = LevelPalette.fromFills({
-        for (final type in TetrominoType.values) type: Colors.red,
+        for (final type in TetrominoType.values) type: const Color(0xFFFF0000),
       });
       final themes = LevelThemes(base: darkTetrisTheme, palettes: [palette]);
       final t = themes.forLevel(7);
-      expect(t.tetrominoColors.fillFor(TetrominoType.T), Colors.red);
-      expect(t.tetrominoColors.borderFor(TetrominoType.T), isNot(Colors.red));
+      expect(
+        t.tetrominoColors.fillFor(TetrominoType.T),
+        const Color(0xFFFF0000),
+      );
+      expect(
+        t.tetrominoColors.borderFor(TetrominoType.T),
+        isNot(const Color(0xFFFF0000)),
+      );
       expect(t.boardBackground, darkTetrisTheme.boardBackground);
     });
   });

@@ -22,7 +22,9 @@ jobs:
           flutter-version: ${{ matrix.flutter }}
           cache: true
 
-      - run: flutter pub get
+      # --no-example: the example app needs Flutter 3.47+, which the oldest
+      # supported version in the matrix does not have.
+      - run: flutter pub get --no-example
 
       - name: Check formatting
         if: matrix.flutter == ''
@@ -32,9 +34,14 @@ jobs:
 
       - run: flutter test --coverage
 
-      - name: Test example app
+      # The example app uses material_ui and needs Flutter 3.47+, so it is
+      # only checked on latest stable.
+      - name: Analyze and test example app
+        if: matrix.flutter == ''
         working-directory: example
-        run: flutter test
+        run: |
+          flutter analyze
+          flutter test
 
       # Newer Flutter tooling can rewrite checked-in files (e.g.
       # analysis_options.yaml) during the run. Show what changed, then restore
