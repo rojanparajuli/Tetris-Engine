@@ -22,7 +22,9 @@ jobs:
           flutter-version: ${{ matrix.flutter }}
           cache: true
 
-      - run: flutter pub get
+      # --no-example: the example app needs Flutter 3.47+, which the oldest
+      # supported version in the matrix does not have.
+      - run: flutter pub get --no-example
 
       - name: Check formatting
         if: matrix.flutter == ''
